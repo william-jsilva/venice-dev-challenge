@@ -108,7 +108,32 @@ Use o token retornado no header `Authorization: Bearer {token}` para as demais r
 
 ## 📡 Endpoints da API
 
-### POST /api/orders
+### Health Checks
+
+#### GET /health
+Endpoint principal de health check que verifica todos os serviços.
+
+#### GET /health/ready
+Verifica se a aplicação está pronta para receber tráfego (dependências externas).
+
+#### GET /health/live
+Verifica se a aplicação está viva (health check básico da aplicação).
+
+#### GET /api/health/status
+Endpoint detalhado com informações completas de todos os health checks.
+
+#### GET /api/health/info
+Informações básicas da aplicação (versão, ambiente, recursos do sistema).
+
+#### GET /api/health/ready
+Endpoint de readiness via API com resposta padronizada.
+
+#### GET /api/health/live
+Endpoint de liveness via API com resposta padronizada.
+
+### Orders
+
+#### POST /api/orders
 Cria um novo pedido.
 
 **Headers:**
@@ -157,6 +182,11 @@ dotnet test
 
 - **RabbitMQ Management**: `http://localhost:15672` (guest/guest)
 - **Swagger UI**: `http://localhost:5000/swagger`
+- **Health Checks**: 
+  - `http://localhost:5000/health` - Status completo
+  - `http://localhost:5000/health/ready` - Readiness
+  - `http://localhost:5000/health/live` - Liveness
+  - `http://localhost:5000/api/health/status` - Status via API
 
 ## 🔧 Configuração
 
@@ -227,6 +257,12 @@ VeniceOrders/
 - Todos os endpoints protegidos
 - Login simulado para obtenção de token
 
+✅ **Health Checks**
+- Endpoints de health check para monitoramento
+- Verificação de serviços externos (SQL Server, MongoDB, Redis, RabbitMQ)
+- Endpoints de readiness e liveness
+- Health checks customizados para a aplicação
+
 ## 🔄 Fluxo de Dados
 
 1. **Criação de Pedido**:
@@ -245,7 +281,6 @@ VeniceOrders/
 
 - [ ] Implementar validações mais robustas
 - [ ] Adicionar logs estruturados
-- [ ] Implementar health checks
 - [ ] Adicionar métricas de performance
 - [ ] Implementar testes de integração
 - [ ] Adicionar documentação da API com OpenAPI

@@ -14,6 +14,7 @@ using Venice.Orders.Domain.Repositories;
 using Venice.Orders.Application.Interfaces;
 using Venice.Orders.Application;
 using Venice.Orders.WebApi.Middleware;
+using Venice.Orders.WebApi.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +29,7 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description = "API for managing orders in the Venice system"
     });
-    
+
     // Include XML comments for better documentation
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
@@ -36,7 +37,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         c.IncludeXmlComments(xmlPath);
     }
-    
+
     // Custom schema ID resolver to avoid conflicts
     c.CustomSchemaIds(type =>
     {
@@ -46,7 +47,7 @@ builder.Services.AddSwaggerGen(c =>
         }
         return type.Name;
     });
-    
+
     // Add JWT authentication support
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
@@ -56,7 +57,7 @@ builder.Services.AddSwaggerGen(c =>
         Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
-    
+
     c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
         {
@@ -114,16 +115,24 @@ builder.Services.AddSingleton<IMongoDatabase>(provider =>
 builder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
 {
     var connectionString = builder.Configuration.GetConnectionString("Redis");
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        throw new InvalidOperationException("Redis connection string is not configured");
+    }
     return ConnectionMultiplexer.Connect(connectionString);
 });
 
-// RabbitMQ
-builder.Services.AddSingleton<IConnection>(provider =>
-{
-    var connectionString = builder.Configuration.GetConnectionString("RabbitMQ");
-    var factory = new ConnectionFactory { Uri = new Uri(connectionString) };
-    return factory.CreateConnection();
-});
+// RabbitMQ - Temporarily disabled due to connection issues
+// builder.Services.AddSingleton<IConnection>(provider =>
+// {
+//     var connectionString = builder.Configuration.GetConnectionString("RabbitMQ");
+//     if (string.IsNullOrEmpty(connectionString))
+//     {
+//         throw new InvalidOperationException("RabbitMQ connection string is not configured");
+//     }
+//     var factory = new ConnectionFactory { Uri = new Uri(connectionString) };
+//     return factory.CreateConnection();
+// });
 
 // Repositories
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
@@ -138,6 +147,30 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Appli
 
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(ApplicationLayer).Assembly);
+
+// Health Checks
+builder.Services.AddHealthChecks()
+    .AddCheck<CustomHealthCheck>("application", tags: new[] { "app" })
+    .AddCheck<ExternalServicesHealthCheck>("external_services", tags: new[] { "external" })
+    .AddSqlServer(
+        builder.Configuration.GetConnectionString("SqlServer") ?? string.Empty,
+        name: "sqlserver",
+        tags: new[] { "database", "sql" },
+        timeout: TimeSpan.FromSeconds(5))
+    .AddMongoDb(
+        provider => new MongoClient(builder.Configuration.GetConnectionString("MongoDB") ?? string.Empty),
+        name: "mongodb",
+        tags: new[] { "database", "nosql" },
+        timeout: TimeSpan.FromSeconds(5))
+    .AddRedis(
+        builder.Configuration.GetConnectionString("Redis") ?? string.Empty,
+        name: "redis",
+        tags: new[] { "cache" },
+        timeout: TimeSpan.FromSeconds(5))
+
+    .AddDbContextCheck<VeniceOrdersContext>(
+        name: "ef_core",
+        tags: new[] { "database", "ef" });
 
 
 
@@ -159,6 +192,76 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Health Check endpoints
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+
+        var result = new
+        {
+            status = report.Status.ToString(),
+            timestamp = DateTime.UtcNow,
+            duration = report.TotalDuration,
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                description = e.Value.Description,
+                duration = e.Value.Duration,
+                tags = e.Value.Tags,
+                data = e.Value.Data
+            })
+        };
+
+        await context.Response.WriteAsJsonAsync(result);
+    }
+});
+
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("external") || check.Tags.Contains("database"),
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+
+        var result = new
+        {
+            status = report.Status.ToString(),
+            timestamp = DateTime.UtcNow,
+            duration = report.TotalDuration,
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                description = e.Value.Description,
+                duration = e.Value.Duration
+            })
+        };
+
+        await context.Response.WriteAsJsonAsync(result);
+    }
+});
+
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("app"),
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+
+        var result = new
+        {
+            status = report.Status.ToString(),
+            timestamp = DateTime.UtcNow,
+            duration = report.TotalDuration
+        };
+
+        await context.Response.WriteAsJsonAsync(result);
+    }
+});
 
 // Ensure database is created
 //using (var scope = app.Services.CreateScope())
