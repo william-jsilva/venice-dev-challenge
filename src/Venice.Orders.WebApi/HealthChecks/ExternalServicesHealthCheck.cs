@@ -45,7 +45,7 @@ public class ExternalServicesHealthCheck : IHealthCheck
         // Verificar RabbitMQ
         try
         {
-            if (_rabbitMq.IsOpen)
+            if (_rabbitMq != null && _rabbitMq.IsOpen)
             {
                 healthData["rabbitmq"] = "Healthy";
             }

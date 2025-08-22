@@ -122,17 +122,17 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
     return ConnectionMultiplexer.Connect(connectionString);
 });
 
-// RabbitMQ - Temporarily disabled due to connection issues
-// builder.Services.AddSingleton<IConnection>(provider =>
-// {
-//     var connectionString = builder.Configuration.GetConnectionString("RabbitMQ");
-//     if (string.IsNullOrEmpty(connectionString))
-//     {
-//         throw new InvalidOperationException("RabbitMQ connection string is not configured");
-//     }
-//     var factory = new ConnectionFactory { Uri = new Uri(connectionString) };
-//     return factory.CreateConnection();
-// });
+// RabbitMQ
+builder.Services.AddSingleton<IConnection>(provider =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("RabbitMQ");
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        throw new InvalidOperationException("RabbitMQ connection string is not configured");
+    }
+    var factory = new ConnectionFactory { Uri = new Uri(connectionString) };
+    return factory.CreateConnection();
+});
 
 // Repositories
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
@@ -140,7 +140,9 @@ builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
 
 // Services
 builder.Services.AddScoped<ICacheService, RedisCacheService>();
-builder.Services.AddScoped<IEventPublisher, RabbitMQEventPublisher>();
+builder.Services.AddSingleton<IEventPublisher, RabbitMQEventPublisher>();
+
+
 
 // MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ApplicationLayer).Assembly));
