@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Venice.Orders.Domain\Venice.Orders.Domain.csproj" />
+    <ProjectReference Include="..\Venice.Orders.Common\Venice.Orders.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

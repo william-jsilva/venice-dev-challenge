@@ -4,6 +4,7 @@ using Venice.Orders.Domain.Entities;
 using Venice.Orders.Domain.Repositories;
 using Venice.Orders.Domain.Events;
 using Venice.Orders.Application.Interfaces;
+using Venice.Orders.Common.Models;
 
 namespace Venice.Orders.Application.Orders.CreateOrder;
 

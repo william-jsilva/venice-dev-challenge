@@ -1,5 +1,6 @@
 using AutoMapper;
 using Venice.Orders.Application.Dtos;
+using Venice.Orders.Common.Models;
 
 namespace Venice.Orders.Application.Orders.CreateOrder;
 

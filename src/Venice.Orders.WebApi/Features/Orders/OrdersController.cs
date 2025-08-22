@@ -13,9 +13,9 @@ namespace Venice.Orders.WebApi.Features.Orders;
 /// <summary>
 /// Controller for managing order operations
 /// </summary>
-[Authorize]
 [ApiController]
 [Route("api/[controller]")]
+[Produces("application/json")]
 public class OrdersController(IMediator mediator, IMapper mapper) : BaseController
 {
     /// <summary>
@@ -25,6 +25,7 @@ public class OrdersController(IMediator mediator, IMapper mapper) : BaseControll
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The created order details</returns>
     [HttpPost]
+    [Authorize]
     [ProducesResponseType(typeof(CreateOrderResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request, CancellationToken cancellationToken)
@@ -48,9 +49,11 @@ public class OrdersController(IMediator mediator, IMapper mapper) : BaseControll
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The order details</returns>
     [HttpGet("{id}")]
+    [Authorize]
     [ProducesResponseType(typeof(GetOrderResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetOrder(Guid id, CancellationToken cancellationToken)
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetOrder([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var query = new GetOrderQuery(id);
         var response = await mediator.Send(query, cancellationToken);
