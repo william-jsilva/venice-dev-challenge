@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # SQL Server
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - venice_network
+
+  # MongoDB
+  mongodb:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - venice_network
+
+  # Redis
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - venice_network
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - venice_network
+
+  # Venice Orders API
+  venice-orders-api:
+    build:
+      context: ./src
+      dockerfile: Venice.Orders.WebApi/Dockerfile
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__SqlServer=Server=sqlserver;Database=VeniceOrders;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True
+      - ConnectionStrings__MongoDB=mongodb://mongodb:27017
+      - ConnectionStrings__Redis=redis:6379
+      - ConnectionStrings__RabbitMQ=amqp://guest:guest@rabbitmq:5672
+      - MongoDB__DatabaseName=VeniceOrders
+      - Jwt__Key=your-super-secret-key-with-at-least-32-characters
+      - Jwt__Issuer=VeniceOrders
+      - Jwt__Audience=VeniceOrders
+    depends_on:
+      - sqlserver
+      - mongodb
+      - redis
+      - rabbitmq
+    networks:
+      - venice_network
+
+volumes:
+  sqlserver_data:
+  mongodb_data:
+  rabbitmq_data:
+
+networks:
+  venice_network:
+    driver: bridge
+
+
+
+
