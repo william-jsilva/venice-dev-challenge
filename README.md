@@ -62,23 +62,137 @@ O projeto segue os princípios da **Clean Architecture** combinada com **CQRS (C
 
 ### Pré-requisitos
 
-- Docker e Docker Compose
-- .NET 8.0 SDK (para desenvolvimento local)
+- **Docker Desktop** instalado e rodando
+- **Docker Compose** (incluído no Docker Desktop)
+- **Git** para clonar o repositório
 
-### Execução com Docker
+### 🐳 Execução com Docker (Passo a Passo)
 
-1. Clone o repositório:
+#### **Passo 1: Preparar o Ambiente**
 ```bash
+# 1. Clone o repositório
 git clone <repository-url>
-cd VeniceOrders
+cd venice-dev-challenge
+
+# 2. Verificar se o Docker está rodando
+docker --version
+docker-compose --version
 ```
 
-2. Execute o comando para subir todos os serviços:
+#### **Passo 2: Execução Automática (Recomendado)**
+
+##### Windows (PowerShell)
+```powershell
+# Execute o script de inicialização
+.\start-venice.ps1
+```
+
+##### Linux/Mac (Bash)
 ```bash
-docker compose up
+# Torne o script executável e execute
+chmod +x start-venice.sh
+./start-venice.sh
 ```
 
-3. A API estará disponível em: `http://localhost:5000`
+#### **Passo 3: Execução Manual (Alternativa)**
+
+```bash
+# 1. Parar containers existentes (se houver)
+docker-compose down
+
+# 2. Build e iniciar todos os serviços
+docker-compose up --build -d
+
+# 3. Verificar se os containers estão rodando
+docker-compose ps
+
+# 4. Ver logs em tempo real (opcional)
+docker-compose logs -f
+```
+
+#### **Passo 4: Verificar se a Aplicação Está Funcionando**
+
+```bash
+# Verificar health check da aplicação
+curl http://localhost:5000/health/live
+
+# Verificar status completo
+curl http://localhost:5000/health
+
+# Abrir no navegador
+# http://localhost:5000/swagger
+```
+
+### 📋 Comandos Úteis do Docker
+
+```bash
+# Ver containers rodando
+docker-compose ps
+
+# Ver logs de um serviço específico
+docker-compose logs venice-orders-api
+docker-compose logs sqlserver
+docker-compose logs mongodb
+
+# Ver logs em tempo real
+docker-compose logs -f
+
+# Parar todos os serviços
+docker-compose down
+
+# Parar e remover volumes (dados)
+docker-compose down -v
+
+# Rebuild e reiniciar
+docker-compose up --build -d
+
+# Executar comando em um container
+docker-compose exec venice-orders-api bash
+```
+
+### 🔍 Troubleshooting
+
+#### **Problema: Porta já em uso**
+```bash
+# Verificar o que está usando a porta 5000
+netstat -ano | findstr :5000  # Windows
+lsof -i :5000                 # Linux/Mac
+
+# Parar o processo ou usar porta diferente no docker-compose.yml
+```
+
+#### **Problema: Containers não iniciam**
+```bash
+# Verificar logs detalhados
+docker-compose logs
+
+# Verificar se há conflitos de rede
+docker network ls
+docker network prune
+```
+
+#### **Problema: Banco de dados não conecta**
+```bash
+# Verificar se o SQL Server está pronto
+docker-compose exec sqlserver /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -Q "SELECT 1"
+
+# Verificar se o MongoDB está pronto
+docker-compose exec mongodb mongosh --eval "db.adminCommand('ping')"
+```
+
+### Execução Local (Desenvolvimento)
+
+1. Certifique-se de que os serviços estão rodando:
+   - SQL Server: `localhost:1433`
+   - MongoDB: `localhost:27017`
+   - Redis: `localhost:6379`
+   - RabbitMQ: `localhost:5672`
+
+2. Execute a aplicação:
+```bash
+cd src
+dotnet run --project Venice.Orders.WebApi
+```
 
 ### Execução Local
 
@@ -180,33 +294,65 @@ dotnet test
 
 ## 📊 Monitoramento
 
-- **RabbitMQ Management**: `http://localhost:15672` (guest/guest)
+### Endpoints Disponíveis
+
+- **API Principal**: `http://localhost:5000`
 - **Swagger UI**: `http://localhost:5000/swagger`
-- **Health Checks**: 
-  - `http://localhost:5000/health` - Status completo
-  - `http://localhost:5000/health/ready` - Readiness
-  - `http://localhost:5000/health/live` - Liveness
-  - `http://localhost:5000/api/health/status` - Status via API
+- **RabbitMQ Management**: `http://localhost:15672` (guest/guest)
+
+### Health Checks
+
+- **Status Completo**: `http://localhost:5000/health`
+- **Readiness**: `http://localhost:5000/health/ready`
+- **Liveness**: `http://localhost:5000/health/live`
+- **Status via API**: `http://localhost:5000/api/health/status`
+- **Informações do Sistema**: `http://localhost:5000/api/health/info`
+
+### Scripts de Inicialização
+
+Os scripts `start-venice.ps1` (Windows) e `start-venice.sh` (Linux/Mac) automatizam:
+
+- ✅ Verificação do Docker
+- ✅ Parada de containers existentes
+- ✅ Build e inicialização dos serviços
+- ✅ Aguardar serviços ficarem prontos
+- ✅ Verificação de saúde da API
+- ✅ Exibição de endpoints disponíveis
 
 ## 🔧 Configuração
+
+### Configuração Automática (Docker)
+
+Quando executado com Docker, a aplicação usa automaticamente:
+
+- **SQL Server**: `sqlserver:1433` (usuário: `sa`, senha: `YourStrong@Passw0rd`)
+- **MongoDB**: `mongodb:27017`
+- **Redis**: `redis:6379`
+- **RabbitMQ**: `rabbitmq:5672` (usuário: `guest`, senha: `guest`)
+
+### Configuração Local (Desenvolvimento)
 
 As configurações estão no arquivo `appsettings.json`:
 
 ```json
 {
   "ConnectionStrings": {
-    "SqlServer": "Server=localhost;Database=VeniceOrders;...",
+    "SqlServer": "Server=localhost;Database=VeniceOrders;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True",
     "MongoDB": "mongodb://localhost:27017",
     "Redis": "localhost:6379",
     "RabbitMQ": "amqp://guest:guest@localhost:5672"
   },
   "Jwt": {
-    "Key": "your-secret-key",
+    "Key": "your-super-secret-key-with-at-least-32-characters",
     "Issuer": "VeniceOrders",
     "Audience": "VeniceOrders"
   }
 }
 ```
+
+### Configuração Docker
+
+Para Docker, use o arquivo `appsettings.Docker.json` que contém as configurações otimizadas para containers.
 
 ## 📁 Estrutura do Projeto
 

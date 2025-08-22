@@ -167,7 +167,6 @@ builder.Services.AddHealthChecks()
         name: "redis",
         tags: new[] { "cache" },
         timeout: TimeSpan.FromSeconds(5))
-
     .AddDbContextCheck<VeniceOrdersContext>(
         name: "ef_core",
         tags: new[] { "database", "ef" });
@@ -263,11 +262,22 @@ app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthC
     }
 });
 
-// Ensure database is created
-//using (var scope = app.Services.CreateScope())
-//{
-//    var context = scope.ServiceProvider.GetRequiredService<VeniceOrdersContext>();
-//    context.Database.EnsureCreated();
-//}
+// Ensure database is created when running in Docker
+if (app.Environment.EnvironmentName == "Docker")
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        try
+        {
+            var context = scope.ServiceProvider.GetRequiredService<VeniceOrdersContext>();
+            context.Database.EnsureCreated();
+            Console.WriteLine("Database created successfully");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating database: {ex.Message}");
+        }
+    }
+}
 
 app.Run();

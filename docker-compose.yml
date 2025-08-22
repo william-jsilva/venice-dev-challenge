@@ -7,12 +7,19 @@ services:
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Developer
     ports:
       - "1433:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
     networks:
       - venice_network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
 
   # MongoDB
   mongodb:
@@ -23,6 +30,12 @@ services:
       - mongodb_data:/data/db
     networks:
       - venice_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
 
   # Redis
   redis:
@@ -31,6 +44,12 @@ services:
       - "6379:6379"
     networks:
       - venice_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
   # RabbitMQ
   rabbitmq:
@@ -45,6 +64,12 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - venice_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:15672/api/overview"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
 
   # Venice Orders API
   venice-orders-api:
@@ -54,22 +79,25 @@ services:
     ports:
       - "5000:80"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__SqlServer=Server=sqlserver;Database=VeniceOrders;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True
-      - ConnectionStrings__MongoDB=mongodb://mongodb:27017
-      - ConnectionStrings__Redis=redis:6379
-      - ConnectionStrings__RabbitMQ=amqp://guest:guest@rabbitmq:5672
-      - MongoDB__DatabaseName=VeniceOrders
-      - Jwt__Key=your-super-secret-key-with-at-least-32-characters
-      - Jwt__Issuer=VeniceOrders
-      - Jwt__Audience=VeniceOrders
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:80
     depends_on:
-      - sqlserver
-      - mongodb
-      - redis
-      - rabbitmq
+      sqlserver:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - venice_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 volumes:
   sqlserver_data:
