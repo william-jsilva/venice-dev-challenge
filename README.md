@@ -65,6 +65,35 @@ O projeto segue os princípios da **Clean Architecture** combinada com **CQRS (C
 - **Docker Desktop** instalado e rodando
 - **Docker Compose** (incluído no Docker Desktop)
 - **Git** para clonar o repositório
+- **.NET 9.0 SDK** (para desenvolvimento local)
+
+### 🗄️ Migrações do Banco de Dados
+
+O projeto usa **Entity Framework Core Migrations** para gerenciar o esquema do banco de dados SQL Server.
+
+#### Aplicar Migrações (Desenvolvimento Local)
+```powershell
+# Windows
+cd src\Venice.Orders.Infrastructure
+dotnet ef database update --startup-project ..\Venice.Orders.WebApi
+
+# Linux/macOS
+cd src/Venice.Orders.Infrastructure
+dotnet ef database update --startup-project ../Venice.Orders.WebApi
+```
+
+#### Criar Nova Migração
+```powershell
+# Windows
+cd src\Venice.Orders.Infrastructure
+dotnet ef migrations add "NomeDaMigracao" --startup-project ..\Venice.Orders.WebApi
+
+# Linux/macOS
+cd src/Venice.Orders.Infrastructure
+dotnet ef migrations add "NomeDaMigracao" --startup-project ../Venice.Orders.WebApi
+```
+
+**📚 Documentação Completa**: [MIGRATIONS_README.md](./MIGRATIONS_README.md) | [EF_MIGRATIONS_GUIDE.md](./EF_MIGRATIONS_GUIDE.md)
 
 ### 🐳 Execução com Docker (Passo a Passo)
 
@@ -79,22 +108,7 @@ docker --version
 docker-compose --version
 ```
 
-#### **Passo 2: Execução Automática (Recomendado)**
-
-##### Windows (PowerShell)
-```powershell
-# Execute o script de inicialização
-.\start-venice.ps1
-```
-
-##### Linux/Mac (Bash)
-```bash
-# Torne o script executável e execute
-chmod +x start-venice.sh
-./start-venice.sh
-```
-
-#### **Passo 3: Execução Manual (Alternativa)**
+#### **Passo 2: Execução com Docker**
 
 ```bash
 # 1. Parar containers existentes (se houver)
@@ -110,7 +124,7 @@ docker-compose ps
 docker-compose logs -f
 ```
 
-#### **Passo 4: Verificar se a Aplicação Está Funcionando**
+#### **Passo 3: Verificar se a Aplicação Está Funcionando**
 
 ```bash
 # Verificar health check da aplicação
@@ -245,6 +259,31 @@ Endpoint de readiness via API com resposta padronizada.
 #### GET /api/health/live
 Endpoint de liveness via API com resposta padronizada.
 
+### Auth
+
+#### POST /api/auth/register
+Registra um novo usuário.
+
+**Body:**
+```json
+{
+  "username": "novousuario",
+  "password": "senha123",
+  "email": "usuario@exemplo.com"
+}
+```
+
+#### POST /api/auth/login
+Faz login de um usuário.
+
+**Body:**
+```json
+{
+  "username": "admin",
+  "password": "password"
+}
+```
+
 ### Orders
 
 #### POST /api/orders
@@ -275,7 +314,7 @@ Content-Type: application/json
 }
 ```
 
-### GET /api/orders/{id}
+#### GET /api/orders/{id}
 Busca um pedido pelo ID.
 
 **Headers:**
@@ -285,12 +324,26 @@ Authorization: Bearer {token}
 
 ## 🧪 Testes
 
+### Testes Unitários
+
 Execute os testes unitários:
 
 ```bash
 cd src
 dotnet test
 ```
+
+### Testes de Integração
+
+Para testar se a API está funcionando corretamente, você pode usar ferramentas como Postman, curl ou qualquer cliente HTTP de sua preferência.
+
+Teste os seguintes endpoints:
+- ✅ Health checks da aplicação
+- ✅ Registro de novos usuários
+- ✅ Login de usuários
+- ✅ Criação de pedidos
+- ✅ Busca de pedidos
+- ✅ Health checks específicos
 
 ## 📊 Monitoramento
 
@@ -308,16 +361,34 @@ dotnet test
 - **Status via API**: `http://localhost:5000/api/health/status`
 - **Informações do Sistema**: `http://localhost:5000/api/health/info`
 
-### Scripts de Inicialização
+### Inicialização Manual
 
-Os scripts `start-venice.ps1` (Windows) e `start-venice.sh` (Linux/Mac) automatizam:
+Para inicializar o projeto manualmente:
 
-- ✅ Verificação do Docker
-- ✅ Parada de containers existentes
-- ✅ Build e inicialização dos serviços
+- ✅ Verificar se o Docker está rodando
+- ✅ Parar containers existentes: `docker-compose down`
+- ✅ Build e inicialização: `docker-compose up --build -d`
 - ✅ Aguardar serviços ficarem prontos
-- ✅ Verificação de saúde da API
-- ✅ Exibição de endpoints disponíveis
+- ✅ Verificar saúde da API: `curl http://localhost:5000/health/live`
+- ✅ Acessar Swagger UI: `http://localhost:5000/swagger`
+
+## 🔧 Correções Implementadas
+
+### Problemas Resolvidos
+
+1. **CreateOrder não funcionando**: Corrigido mapeamento do AutoMapper e lógica de criação de pedidos
+2. **Falta de rota de registro**: Adicionada rota `POST /api/auth/register` no AuthController
+3. **Health checks do Docker**: Corrigidos comandos de health check para RabbitMQ, SQL Server e API
+
+### Arquivos Modificados
+
+- `src/Venice.Orders.WebApi/Features/Orders/CreateOrder/CreateOrderProfile.cs` - Mapeamento AutoMapper simplificado
+- `src/Venice.Orders.Application/Orders/CreateOrder/CreateOrderCommand.cs` - Construtor removido
+- `src/Venice.Orders.Application/Orders/CreateOrder/CreateOrderHandler.cs` - Lógica de criação melhorada
+- `src/Venice.Orders.WebApi/Features/Auth/AuthController.cs` - Rota de registro adicionada
+- `docker-compose.yml` - Health checks corrigidos
+
+Para mais detalhes, consulte o arquivo `CORREÇÕES_IMPLEMENTADAS.md`.
 
 ## 🔧 Configuração
 

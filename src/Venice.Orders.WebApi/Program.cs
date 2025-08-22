@@ -264,7 +264,7 @@ app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthC
     }
 });
 
-// Ensure database is created when running in Docker
+// Apply migrations when running in Docker
 if (app.Environment.EnvironmentName == "Docker")
 {
     using (var scope = app.Services.CreateScope())
@@ -272,12 +272,12 @@ if (app.Environment.EnvironmentName == "Docker")
         try
         {
             var context = scope.ServiceProvider.GetRequiredService<VeniceOrdersContext>();
-            context.Database.EnsureCreated();
-            Console.WriteLine("Database created successfully");
+            context.Database.Migrate();
+            Console.WriteLine("Database migrations applied successfully");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error creating database: {ex.Message}");
+            Console.WriteLine($"Error applying migrations: {ex.Message}");
         }
     }
 }

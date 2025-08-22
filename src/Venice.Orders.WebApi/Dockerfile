@@ -40,14 +40,7 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-# Copy wait script
-COPY ["Venice.Orders.WebApi/scripts/wait-for-db.sh", "/app/"]
-RUN chmod +x /app/wait-for-db.sh
-
-# Create startup script
-RUN echo '#!/bin/bash\n/app/wait-for-db.sh\nexec dotnet Venice.Orders.WebApi.dll' > /app/startup.sh && chmod +x /app/startup.sh
-
-ENTRYPOINT ["/app/startup.sh"]
+ENTRYPOINT ["dotnet", "Venice.Orders.WebApi.dll"]
 
 
 

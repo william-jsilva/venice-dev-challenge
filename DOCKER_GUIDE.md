@@ -19,20 +19,7 @@ docker-compose --version
 
 ## 🚀 Execução Rápida
 
-### Opção 1: Script Automático (Recomendado)
-
-#### Windows
-```powershell
-.\start-venice.ps1
-```
-
-#### Linux/Mac
-```bash
-chmod +x start-venice.sh
-./start-venice.sh
-```
-
-### Opção 2: Comandos Manuais
+### Comandos Manuais
 
 ```bash
 # 1. Clonar repositório (se ainda não fez)

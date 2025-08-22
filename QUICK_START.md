@@ -12,13 +12,14 @@
 git clone <repository-url>
 cd venice-dev-challenge
 
-# Execute o script automático
-# Windows:
-.\start-venice.ps1
+# Parar containers existentes (se houver)
+docker-compose down
 
-# Linux/Mac:
-chmod +x start-venice.sh
-./start-venice.sh
+# Build e iniciar todos os serviços
+docker-compose up --build -d
+
+# Verificar se os containers estão rodando
+docker-compose ps
 ```
 
 ### 3️⃣ **Acessar a Aplicação**
@@ -83,7 +84,7 @@ docker-compose logs venice-orders-api
 - ✅ **RabbitMQ** - Mensageria
 - ✅ **Health Checks** - Monitoramento automático
 - ✅ **Swagger** - Documentação da API
-- ✅ **Scripts automáticos** - Inicialização simplificada
+- ✅ **Comandos manuais** - Inicialização via Docker Compose
 
 ## 🎯 Próximos Passos
 

@@ -19,6 +19,25 @@ public class AuthController : ControllerBase
         _configuration = configuration;
     }
 
+    [HttpPost("register")]
+    public IActionResult Register([FromBody] RegisterRequest request)
+    {
+        // Simulação simples de registro
+        // Em produção, você deve validar se o usuário já existe e fazer hash da senha
+        if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
+        {
+            return BadRequest(new { message = "Username and password are required" });
+        }
+
+        // Simular criação de usuário (em produção, salvar no banco de dados)
+        var token = GenerateJwtToken(request.Username);
+        return Ok(new { 
+            message = "User registered successfully",
+            token,
+            user = new { username = request.Username }
+        });
+    }
+
     [HttpPost("login")]
     public IActionResult Login([FromBody] LoginRequest request)
     {
@@ -29,7 +48,7 @@ public class AuthController : ControllerBase
             return Ok(new { token });
         }
 
-        return Unauthorized();
+        return Unauthorized(new { message = "Invalid credentials" });
     }
 
     private string GenerateJwtToken(string username)
@@ -59,5 +78,12 @@ public class LoginRequest
 {
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+}
+
+public class RegisterRequest
+{
+    public string Username { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
 }
 
