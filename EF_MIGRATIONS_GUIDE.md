@@ -67,6 +67,24 @@ CREATE TABLE [Orders] (
 );
 ```
 
+### Users
+```sql
+CREATE TABLE [Users] (
+    [Id] uniqueidentifier NOT NULL,
+    [Username] nvarchar(100) NOT NULL,
+    [Email] nvarchar(255) NOT NULL,
+    [PasswordHash] nvarchar(255) NOT NULL,
+    [CreatedAt] datetime2 NOT NULL,
+    [LastLoginAt] datetime2 NULL,
+    [IsActive] bit NOT NULL,
+    CONSTRAINT [PK_Users] PRIMARY KEY ([Id])
+);
+
+-- Índices únicos
+CREATE UNIQUE INDEX [IX_Users_Email] ON [Users] ([Email]);
+CREATE UNIQUE INDEX [IX_Users_Username] ON [Users] ([Username]);
+```
+
 **Nota**: Os itens do pedido (`OrderItem`) são armazenados no MongoDB, não no SQL Server.
 
 ## ⚠️ Importante

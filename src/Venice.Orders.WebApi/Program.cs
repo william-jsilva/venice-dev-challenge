@@ -137,6 +137,7 @@ builder.Services.AddSingleton<IConnection>(provider =>
 // Repositories
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // Services
 builder.Services.AddScoped<ICacheService, RedisCacheService>();

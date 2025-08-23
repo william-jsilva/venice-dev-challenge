@@ -224,12 +224,33 @@ dotnet run --project Venice.Orders.WebApi
 
 ## 🔐 Autenticação
 
-O sistema utiliza autenticação JWT. Para obter um token:
+O sistema utiliza autenticação JWT com usuários armazenados no banco de dados SQL Server.
 
+### Inicializar Dados de Teste
+```bash
+# Criar usuário admin padrão
+curl -X POST http://localhost:5000/api/auth/init-test-data
+```
+
+### Registrar Novo Usuário
+```bash
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "novousuario",
+    "email": "usuario@exemplo.com",
+    "password": "senha123"
+  }'
+```
+
+### Fazer Login
 ```bash
 curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "password"}'
+  -d '{
+    "username": "admin",
+    "password": "password"
+  }'
 ```
 
 Use o token retornado no header `Authorization: Bearer {token}` para as demais requisições.
