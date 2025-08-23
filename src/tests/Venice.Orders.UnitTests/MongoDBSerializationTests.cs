@@ -3,6 +3,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using Venice.Orders.Domain.Entities;
 using FluentAssertions;
+using Venice.Orders.Infrastructure.Services;
 
 namespace Venice.Orders.UnitTests;
 
@@ -11,7 +12,11 @@ namespace Venice.Orders.UnitTests;
 /// </summary>
 public class MongoDBSerializationTests
 {
-
+    public MongoDBSerializationTests()
+    {
+        // Configure MongoDB serialization before running tests
+        MongoDbConfigurationService.ConfigureSerialization();
+    }
 
     [Fact]
     public void GuidSerialization_ShouldWorkWithOrderItem()

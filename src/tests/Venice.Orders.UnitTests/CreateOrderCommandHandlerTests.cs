@@ -28,42 +28,41 @@ public class CreateOrderCommandHandlerTests
             _cacheServiceMock.Object);
     }
 
-    //[Fact]
-    //public async Task Handle_ValidCommand_ShouldCreateOrderAndPublishEvent()
-    //{
-    //    // Arrange
-    //    var request = new Venice.Orders.Application.Dtos.CreateOrderRequest
-    //    {
-    //        CustomerId = Guid.NewGuid(),
-    //        Items = new List<Venice.Orders.Application.Dtos.OrderItemRequest>
-    //        {
-    //            new() { ProductName = "Test Product", Quantity = 2, UnitPrice = 10.00m }
-    //        }
-    //    };
+    [Fact]
+    public async Task Handle_ValidCommand_ShouldCreateOrderAndPublishEvent()
+    {
+        // Arrange
+        var customerId = Guid.NewGuid();
+        var command = new CreateOrderCommand
+        {
+            CustomerId = customerId,
+            Items = new List<Venice.Orders.Application.Dtos.OrderItemRequest>
+            {
+                new() { ProductName = "Test Product", Quantity = 2, UnitPrice = 10.00m }
+            }
+        };
 
-    //    var command = new CreateOrderCommand(request);
+        _orderRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<Venice.Orders.Domain.Entities.Order>()))
+            .ReturnsAsync((Venice.Orders.Domain.Entities.Order order) => order);
 
-    //    _orderRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<Venice.Orders.Domain.Entities.Order>()))
-    //        .ReturnsAsync((Venice.Orders.Domain.Entities.Order order) => order);
+        _orderItemRepositoryMock.Setup(x => x.CreateManyAsync(It.IsAny<IEnumerable<Venice.Orders.Domain.Entities.OrderItem>>()))
+            .ReturnsAsync((IEnumerable<Venice.Orders.Domain.Entities.OrderItem> items) => items);
 
-    //    _orderItemRepositoryMock.Setup(x => x.CreateManyAsync(It.IsAny<IEnumerable<Venice.Orders.Domain.Entities.OrderItem>>()))
-    //        .ReturnsAsync((IEnumerable<Venice.Orders.Domain.Entities.OrderItem> items) => items);
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
 
-    //    // Act
-    //    var result = await _handler.Handle(command, CancellationToken.None);
+        // Assert
+        result.Should().NotBeNull();
+        result.CustomerId.Should().Be(customerId);
+        result.Items.Should().HaveCount(1);
+        result.Items.First().ProductName.Should().Be("Test Product");
+        result.TotalAmount.Should().Be(20.00m);
 
-    //    // Assert
-    //    result.Should().NotBeNull();
-    //    result.CustomerId.Should().Be(request.CustomerId);
-    //    result.Items.Should().HaveCount(1);
-    //    result.Items.First().ProductName.Should().Be("Test Product");
-    //    result.TotalAmount.Should().Be(20.00m);
-
-    //    _orderRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<Venice.Orders.Domain.Entities.Order>()), Times.Once);
-    //    _orderItemRepositoryMock.Verify(x => x.CreateManyAsync(It.IsAny<IEnumerable<Venice.Orders.Domain.Entities.OrderItem>>()), Times.Once);
-    //    _eventPublisherMock.Verify(x => x.PublishAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Once);
-    //    _cacheServiceMock.Verify(x => x.RemoveAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
-    //}
+        _orderRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<Venice.Orders.Domain.Entities.Order>()), Times.Once);
+        _orderItemRepositoryMock.Verify(x => x.CreateManyAsync(It.IsAny<IEnumerable<Venice.Orders.Domain.Entities.OrderItem>>()), Times.Once);
+        _eventPublisherMock.Verify(x => x.PublishAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(x => x.RemoveAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
 }
 
 

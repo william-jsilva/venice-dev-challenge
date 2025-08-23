@@ -71,33 +71,33 @@ services:
       retries: 10
       start_period: 30s
 
-  # # Venice Orders API
-  # venice-orders-api:
-  #   build:
-  #     context: ./src
-  #     dockerfile: Venice.Orders.WebApi/Dockerfile
-  #   ports:
-  #     - "5000:80"
-  #   environment:
-  #     - ASPNETCORE_ENVIRONMENT=Docker
-  #     - ASPNETCORE_URLS=http://+:80
-  #   depends_on:
-  #     sqlserver:
-  #       condition: service_healthy
-  #     mongodb:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   networks:
-  #     - venice_network
-  #   healthcheck:
-  #     test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health/live"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 60s
+  # Venice Orders API
+  venice-orders-api:
+    build:
+      context: ./src
+      dockerfile: Venice.Orders.WebApi/Dockerfile
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:80
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - venice_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 volumes:
   sqlserver_data:

@@ -25,7 +25,7 @@ public class OrdersController(IMediator mediator, IMapper mapper) : BaseControll
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The created order details</returns>
     [HttpPost]
-    //[Authorize]
+    [Authorize]
     [ProducesResponseType(typeof(CreateOrderResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request, CancellationToken cancellationToken)
@@ -49,7 +49,7 @@ public class OrdersController(IMediator mediator, IMapper mapper) : BaseControll
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The order details</returns>
     [HttpGet("{id}")]
-    //[Authorize]
+    [Authorize]
     [ProducesResponseType(typeof(GetOrderResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
