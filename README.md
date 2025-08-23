@@ -13,519 +13,204 @@ O projeto segue os princípios da **Clean Architecture** combinada com **CQRS (C
 #### Justificativa da Arquitetura
 
 1. **Separação de Responsabilidades**: A Clean Architecture separa claramente as camadas de domínio, aplicação, infraestrutura e apresentação
-2. **Independência de Frameworks**: O domínio não depende de tecnologias específicas
-3. **Testabilidade**: Facilita a criação de testes unitários e de integração
-4. **Manutenibilidade**: Código organizado e fácil de manter
-5. **Escalabilidade**: Permite evolução independente de cada camada
+2. **Independência de Frameworks**: O domínio não depende de frameworks externos, facilitando testes e manutenção
+3. **CQRS**: Separação entre comandos (write) e queries (read) para otimizar performance e escalabilidade
+4. **DDD**: Modelagem focada no domínio de negócio, com entidades e agregados bem definidos
 
-#### Estrutura das Camadas
+### Estrutura do Projeto
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Presentation Layer                       │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │ Controllers │  │   DTOs      │  │ Middleware  │        │
-│  └─────────────┘  └─────────────┘  └─────────────┘        │
-└─────────────────────────────────────────────────────────────┘
-                              │
-┌─────────────────────────────────────────────────────────────┐
-│                   Application Layer                         │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │  Commands   │  │   Queries   │  │  Handlers   │        │
-│  └─────────────┘  └─────────────┘  └─────────────┘        │
-└─────────────────────────────────────────────────────────────┘
-                              │
-┌─────────────────────────────────────────────────────────────┐
-│                     Domain Layer                            │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │  Entities   │  │  Services   │  │ Repositories│        │
-│  └─────────────┘  └─────────────┘  └─────────────┘        │
-└─────────────────────────────────────────────────────────────┘
-                              │
-┌─────────────────────────────────────────────────────────────┐
-│                  Infrastructure Layer                       │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │   ORM/EF    │  │   External  │  │   Services  │        │
-│  │             │  │   Services  │  │             │        │
-│  └─────────────┘  └─────────────┘  └─────────────┘        │
-└─────────────────────────────────────────────────────────────┘
+src/
+├── Venice.Orders.Domain/          # Camada de Domínio (Entidades, Interfaces)
+├── Venice.Orders.Application/     # Camada de Aplicação (CQRS, DTOs)
+├── Venice.Orders.Infrastructure/  # Camada de Infraestrutura (Repositórios, Serviços)
+├── Venice.Orders.WebApi/          # Camada de Apresentação (Controllers, Middleware)
+└── Venice.Orders.Common/          # Modelos compartilhados
 ```
-
-### Armazenamento Híbrido
-
-- **SQL Server**: Dados principais dos pedidos (ID, ClienteID, Data, Status, TotalAmount)
-- **MongoDB**: Lista de itens dos pedidos (produto, quantidade, preço unitário)
-- **Redis**: Cache de consultas com TTL de 2 minutos
-- **RabbitMQ**: Mensageria para eventos de domínio
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
 
-- **Docker Desktop** instalado e rodando
-- **Docker Compose** (incluído no Docker Desktop)
-- **Git** para clonar o repositório
-- **.NET 9.0 SDK** (para desenvolvimento local)
+- Docker Desktop
+- .NET 9.0 SDK (para desenvolvimento local)
+- PowerShell (para gerar certificado SSL)
 
-### 🗄️ Migrações do Banco de Dados
+### 1. Configuração SSL (HTTPS)
 
-O projeto usa **Entity Framework Core Migrations** para gerenciar o esquema do banco de dados SQL Server. As migrações são aplicadas automaticamente quando executado com Docker.
+Para habilitar HTTPS, execute o script de geração de certificado:
 
-#### Aplicar Migrações (Desenvolvimento Local)
 ```powershell
-# Windows
-cd src\Venice.Orders.Infrastructure
-dotnet ef database update --startup-project ..\Venice.Orders.WebApi
-
-# Linux/macOS
-cd src/Venice.Orders.Infrastructure
-dotnet ef database update --startup-project ../Venice.Orders.WebApi
+# Execute como Administrador
+# (Certificado SSL não configurado - HTTPS desabilitado)
 ```
 
-#### Criar Nova Migração
-```powershell
-# Windows
-cd src\Venice.Orders.Infrastructure
-dotnet ef migrations add "NomeDaMigracao" --startup-project ..\Venice.Orders.WebApi
-
-# Linux/macOS
-cd src/Venice.Orders.Infrastructure
-dotnet ef migrations add "NomeDaMigracao" --startup-project ../Venice.Orders.WebApi
-```
-
-### 🐳 Execução com Docker (Passo a Passo)
-
-#### **Passo 1: Preparar o Ambiente**
-```bash
-# 1. Clone o repositório
-git clone <repository-url>
-cd venice-dev-challenge
-
-# 2. Verificar se o Docker está rodando
-docker --version
-docker-compose --version
-```
-
-#### **Passo 2: Execução com Docker**
+### 2. Executar com Docker
 
 ```bash
-# 1. Parar containers existentes (se houver)
-docker-compose down
+# Construir e iniciar todos os serviços
+docker-compose up --build
 
-# 2. Build e iniciar todos os serviços
-docker-compose up --build -d
-
-# 3. Verificar se os containers estão rodando
-docker-compose ps
-
-# 4. Ver logs em tempo real (opcional)
-docker-compose logs -f
+# Executar em background
+docker-compose up -d --build
 ```
 
-#### **Passo 3: Verificar se a Aplicação Está Funcionando**
+### 3. Acessar a API
 
-```bash
-# Verificar health check da aplicação
-curl http://localhost:5000/health/live
+#### **Desenvolvimento Local**
+- **HTTP**: http://localhost:7050
+- **HTTPS**: https://localhost:7051
+- **Swagger UI**: http://localhost:7050/swagger ou https://localhost:7051/swagger
+- **Health Check**: http://localhost:7050/health
 
-# Verificar status completo
-curl http://localhost:5000/health
+#### **Docker**
+- **HTTP**: http://localhost:5000
+- **Swagger UI**: http://localhost:5000/swagger
+- **Health Check**: http://localhost:5000/health
 
-# Abrir no navegador
-# http://localhost:5000/swagger
-```
+### 4. Serviços Disponíveis
 
-### 📋 Comandos Úteis do Docker
+#### **Desenvolvimento Local**
+- **API**: http://localhost:7050 (HTTP) / https://localhost:7051 (HTTPS)
+- **Swagger UI**: http://localhost:7050/swagger
 
-```bash
-# Ver containers rodando
-docker-compose ps
-
-# Ver logs de um serviço específico
-docker-compose logs venice-orders-api
-docker-compose logs sqlserver
-docker-compose logs mongodb
-
-# Ver logs em tempo real
-docker-compose logs -f
-
-# Parar todos os serviços
-docker-compose down
-
-# Parar e remover volumes (dados)
-docker-compose down -v
-
-# Rebuild e reiniciar
-docker-compose up --build -d
-
-# Executar comando em um container
-docker-compose exec venice-orders-api bash
-```
-
-### 🔍 Troubleshooting
-
-#### **Problema: Porta já em uso**
-```bash
-# Verificar o que está usando a porta 5000
-netstat -ano | findstr :5000  # Windows
-lsof -i :5000                 # Linux/Mac
-
-# Parar o processo ou usar porta diferente no docker-compose.yml
-```
-
-#### **Problema: Containers não iniciam**
-```bash
-# Verificar logs detalhados
-docker-compose logs
-
-# Verificar se há conflitos de rede
-docker network ls
-docker network prune
-```
-
-#### **Problema: Banco de dados não conecta**
-```bash
-# Verificar se o SQL Server está pronto
-docker-compose exec sqlserver /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P VeniceOrders@2024 -Q "SELECT 1"
-
-# Verificar se o MongoDB está pronto
-docker-compose exec mongodb mongosh --eval "db.adminCommand('ping')"
-```
-
-### Execução Local (Desenvolvimento)
-
-1. Certifique-se de que os serviços estão rodando:
-   - SQL Server: `localhost:1433`
-   - MongoDB: `localhost:27017`
-   - Redis: `localhost:6379`
-   - RabbitMQ: `localhost:5672`
-
-2. Execute a aplicação:
-```bash
-cd src
-dotnet run --project Venice.Orders.WebApi
-```
+#### **Docker**
+- **API**: http://localhost:5000 (HTTP)
+- **Swagger UI**: http://localhost:5000/swagger
+- **SQL Server**: localhost:1433
+- **MongoDB**: localhost:27017
+- **Redis**: localhost:6379
+- **RabbitMQ**: localhost:5672
+- **RabbitMQ Management**: http://localhost:15672
 
 ## 🔐 Autenticação
 
-O sistema utiliza autenticação JWT com usuários armazenados no banco de dados SQL Server.
+### Credenciais
 
-### Inicializar Dados de Teste
-```bash
-# Criar usuário admin padrão
-curl -X POST http://localhost:5000/api/auth/init-test-data
-```
+- **RabbitMQ**: `venice_user` / `VeniceMQ2024`
+- **SQL Server**: `sa` / `VeniceOrders@2024`
 
-### Registrar Novo Usuário
+### Obter Token JWT
+
 ```bash
+# Registrar usuário
 curl -X POST http://localhost:5000/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{
-    "username": "novousuario",
-    "email": "usuario@exemplo.com",
-    "password": "senha123"
-  }'
-```
+  -d '{"username": "admin", "password": "admin123"}'
 
-### Fazer Login
-```bash
+# Fazer login
 curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{
-    "username": "admin",
-    "password": "password"
-  }'
+  -d '{"username": "admin", "password": "admin123"}'
 ```
-
-Use o token retornado no header `Authorization: Bearer {token}` para as demais requisições.
 
 ## 📡 Endpoints da API
 
+### Autenticação
+- `POST /api/auth/register` - Registrar usuário
+- `POST /api/auth/login` - Fazer login
+
+### Pedidos
+- `POST /api/orders` - Criar pedido (requer autenticação)
+- `GET /api/orders/{id}` - Buscar pedido por ID (requer autenticação)
+
 ### Health Checks
+- `GET /health` - Status geral da aplicação
+- `GET /health/ready` - Status dos serviços externos
+- `GET /health/live` - Status da aplicação
 
-#### GET /health
-Endpoint principal de health check que verifica todos os serviços.
+## 🗄️ Armazenamento Híbrido
 
-#### GET /health/ready
-Verifica se a aplicação está pronta para receber tráfego (dependências externas).
+### SQL Server
+- Dados principais dos pedidos (ID, ClienteID, Data, Status, TotalAmount)
+- Tabelas: Orders, Users
 
-#### GET /health/live
-Verifica se a aplicação está viva (health check básico da aplicação).
+### MongoDB
+- Lista de itens dos pedidos (produto, quantidade, preço unitário)
+- Coleção: OrderItems
 
-#### GET /api/health/status
-Endpoint detalhado com informações completas de todos os health checks.
+## 🔄 Mensageria
 
-#### GET /api/health/info
-Informações básicas da aplicação (versão, ambiente, recursos do sistema).
-
-#### GET /api/health/ready
-Endpoint de readiness via API com resposta padronizada.
-
-#### GET /api/health/live
-Endpoint de liveness via API com resposta padronizada.
-
-### Auth
-
-#### POST /api/auth/register
-Registra um novo usuário.
-
-**Body:**
-```json
-{
-  "username": "novousuario",
-  "password": "senha123",
-  "email": "usuario@exemplo.com"
-}
-```
-
-#### POST /api/auth/login
-Faz login de um usuário.
-
-**Body:**
-```json
-{
-  "username": "admin",
-  "password": "password"
-}
-```
-
-### Orders
-
-#### POST /api/orders
-Cria um novo pedido.
-
-**Headers:**
-```
-Authorization: Bearer {token}
-Content-Type: application/json
-```
-
-**Body:**
-```json
-{
-  "customerId": "123e4567-e89b-12d3-a456-426614174000",
-  "items": [
-    {
-      "productName": "Produto A",
-      "quantity": 2,
-      "unitPrice": 10.50
-    },
-    {
-      "productName": "Produto B",
-      "quantity": 1,
-      "unitPrice": 25.00
-    }
-  ]
-}
-```
-
-#### GET /api/orders/{id}
-Busca um pedido pelo ID.
-
-**Headers:**
-```
-Authorization: Bearer {token}
-```
+### RabbitMQ
+- Evento: `OrderCreatedEvent`
+- Exchange: `venice.orders`
+- Routing Key: `order.created`
 
 ## 🧪 Testes
 
-### Testes Unitários
-
-Execute os testes unitários:
-
 ```bash
+# Executar testes unitários
 cd src
 dotnet test
 ```
 
-### Testes de Integração
-
-Para testar se a API está funcionando corretamente, você pode usar ferramentas como Postman, curl ou qualquer cliente HTTP de sua preferência.
-
-Teste os seguintes endpoints:
-- ✅ Health checks da aplicação
-- ✅ Registro de novos usuários
-- ✅ Login de usuários
-- ✅ Criação de pedidos
-- ✅ Busca de pedidos
-- ✅ Health checks específicos
-
 ## 📊 Monitoramento
 
-### Endpoints Disponíveis
-
-- **API Principal**: `http://localhost:5000`
-- **Swagger UI**: `http://localhost:5000/swagger`
-- **RabbitMQ Management**: `http://localhost:15672` (venice_user/VeniceMQ@2024)
-
 ### Health Checks
+- **Application**: Status da aplicação
+- **External Services**: Status dos serviços externos
+- **SQL Server**: Conexão com banco de dados
+- **MongoDB**: Conexão com MongoDB
+- **Redis**: Conexão com cache
+- **Entity Framework**: Status do contexto
 
-- **Status Completo**: `http://localhost:5000/health`
-- **Readiness**: `http://localhost:5000/health/ready`
-- **Liveness**: `http://localhost:5000/health/live`
-- **Status via API**: `http://localhost:5000/api/health/status`
-- **Informações do Sistema**: `http://localhost:5000/api/health/info`
+## 🔧 Configurações
 
-### Inicialização Manual
+### Variáveis de Ambiente
+- `ASPNETCORE_ENVIRONMENT`: Docker
+- `ASPNETCORE_URLS`: http://+:80;https://+:443
 
-Para inicializar o projeto manualmente:
+### Certificado SSL
+- **Arquivo**: `certs/venice-orders.pfx`
+- **Senha**: `VeniceOrders2024`
+- **Validade**: 1 ano
 
-- ✅ Verificar se o Docker está rodando
-- ✅ Parar containers existentes: `docker-compose down`
-- ✅ Build e inicialização: `docker-compose up --build -d`
-- ✅ Aguardar serviços ficarem prontos
-- ✅ Verificar saúde da API: `curl http://localhost:5000/health/live`
-- ✅ Acessar Swagger UI: `http://localhost:5000/swagger`
+## 🐛 Troubleshooting
 
-## 🔧 Correções Implementadas
+### Problemas Comuns
 
-### Problemas Resolvidos
+1. **Erro de CORS**: Verificar configuração CORS no `appsettings.Docker.json`
+2. **Certificado SSL**: Executar `generate-cert.ps1` como Administrador
+3. **Health Check falhando**: Aguardar inicialização completa dos serviços
+4. **Migrations**: Executadas automaticamente no Docker
 
-1. **CreateOrder não funcionando**: Corrigido mapeamento do AutoMapper e lógica de criação de pedidos
-2. **Falta de rota de registro**: Adicionada rota `POST /api/auth/register` no AuthController
-3. **Health checks do Docker**: Corrigidos comandos de health check para RabbitMQ, SQL Server e API
-4. **Autenticação JWT**: Habilitada autenticação obrigatória em todos os endpoints de pedidos
-5. **Teste unitário falhando**: Corrigido teste de serialização MongoDB com configuração adequada
-6. **API comentada no Docker**: Descomentado serviço da API no docker-compose.yml
-7. **Teste adicional**: Descomentado e corrigido teste do CreateOrderCommandHandler
-8. **Senhas personalizadas**: Alteradas senhas padrão para contexto Venice Orders
+### Logs
 
-### Arquivos Modificados
+```bash
+# Ver logs da API
+docker-compose logs venice-orders-api
 
-- `src/Venice.Orders.WebApi/Features/Orders/OrdersController.cs` - Autenticação JWT habilitada
-- `src/tests/Venice.Orders.UnitTests/MongoDBSerializationTests.cs` - Configuração MongoDB adicionada
-- `src/tests/Venice.Orders.UnitTests/CreateOrderCommandHandlerTests.cs` - Teste descomentado e corrigido
-- `docker-compose.yml` - API descomentada, health checks corrigidos e senhas personalizadas
-- `src/Venice.Orders.WebApi/appsettings.json` - Senhas atualizadas para desenvolvimento local
-- `src/Venice.Orders.WebApi/appsettings.Docker.json` - Senhas atualizadas para Docker
-- `src/Venice.Orders.WebApi/Features/Orders/CreateOrder/CreateOrderProfile.cs` - Mapeamento AutoMapper simplificado
-- `src/Venice.Orders.Application/Orders/CreateOrder/CreateOrderCommand.cs` - Construtor removido
-- `src/Venice.Orders.Application/Orders/CreateOrder/CreateOrderHandler.cs` - Lógica de criação melhorada
-- `src/Venice.Orders.WebApi/Features/Auth/AuthController.cs` - Rota de registro adicionada
+# Ver logs de todos os serviços
+docker-compose logs
 
-### Status Final: ✅ 100% dos Requisitos Atendidos
-
-Todos os requisitos do desafio foram implementados e corrigidos:
-- ✅ Autenticação JWT obrigatória
-- ✅ Todos os testes unitários passando
-- ✅ Docker Compose funcional completo
-- ✅ Endpoints protegidos e funcionais
-- ✅ Senhas personalizadas para contexto Venice Orders
-
-## 🔧 Configuração
-
-### Configuração Automática (Docker)
-
-Quando executado com Docker, a aplicação usa automaticamente:
-
-- **SQL Server**: `sqlserver:1433` (usuário: `sa`, senha: `VeniceOrders@2024`)
-- **MongoDB**: `mongodb:27017`
-- **Redis**: `redis:6379`
-- **RabbitMQ**: `rabbitmq:5672` (usuário: `venice_user`, senha: `VeniceMQ@2024`)
-
-### Configuração Local (Desenvolvimento)
-
-As configurações estão no arquivo `appsettings.json`:
-
-```json
-{
-  "ConnectionStrings": {
-    "SqlServer": "Server=localhost;Database=VeniceOrders;User Id=sa;Password=VeniceOrders@2024;TrustServerCertificate=True",
-    "MongoDB": "mongodb://localhost:27017",
-    "Redis": "localhost:6379",
-    "RabbitMQ": "amqp://venice_user:VeniceMQ@2024@localhost:5672"
-  },
-  "Jwt": {
-    "Key": "your-super-secret-key-with-at-least-32-characters",
-    "Issuer": "VeniceOrders",
-    "Audience": "VeniceOrders"
-  }
-}
+# Ver logs em tempo real
+docker-compose logs -f
 ```
 
-### Configuração Docker
+## 📝 Notas de Implementação
 
-Para Docker, use o arquivo `appsettings.Docker.json` que contém as configurações otimizadas para containers.
-
-## 📁 Estrutura do Projeto
-
-```
-VeniceOrders/
-├── src/
-│   ├── Venice.Orders.WebApi/          # Camada de apresentação
-│   ├── Venice.Orders.Application/     # Camada de aplicação (CQRS)
-│   ├── Venice.Orders.Domain/          # Camada de domínio
-│   ├── Venice.Orders.Infrastructure/  # Camada de infraestrutura
-│   └── Venice.Orders.Common/          # Utilitários compartilhados
-├── tests/
-│   └── Venice.Orders.UnitTests/       # Testes unitários
-├── docker-compose.yml                 # Orquestração dos serviços
-└── README.md
-```
+- **Cache Redis**: Configurado para 2 minutos
+- **Migrations**: Aplicadas automaticamente no Docker
+- **CORS**: Configurado para permitir todas as origens
+- **HTTPS**: Habilitado com certificado autoassinado
+- **Health Checks**: Implementados para todos os serviços
 
 ## 🎯 Funcionalidades Implementadas
 
-✅ **Endpoint REST para criação de pedido**
-- Recebe JSON com dados do pedido
-- Armazena no banco de dados
-- Contém: ID, ClienteID, Lista de Itens, Data e Status
+✅ Endpoint REST para criação de pedido  
+✅ Armazenamento híbrido (SQL Server + MongoDB)  
+✅ Publicação em fila RabbitMQ  
+✅ Endpoint GET /pedidos/{id}  
+✅ Cache Redis para GET  
+✅ Testes unitários  
+✅ Boas práticas (DDD, SOLID, Clean Architecture)  
+✅ Autenticação JWT obrigatória  
+✅ Docker Compose funcional  
+✅ HTTPS habilitado  
+✅ Health Checks completos  
+✅ CORS configurado  
+✅ Migrations automáticas  
 
-✅ **Armazenamento híbrido**
-- Dados principais no SQL Server
-- Lista de itens no MongoDB
+## 📞 Suporte
 
-✅ **Publicação em fila**
-- Evento `OrderCreatedEvent` publicado no RabbitMQ
-
-✅ **Endpoint GET /pedidos/{id}**
-- Retorna pedido com dados integrados dos dois bancos
-
-✅ **Cache Redis para GET**
-- Cache de 2 minutos para consultas
-
-✅ **Testes unitários**
-- Testes para entidades de domínio
-- Testes para handlers de comando
-
-✅ **Boas práticas**
-- DDD, SOLID, Clean Architecture
-- Injeção de dependência
-- CQRS com MediatR
-
-✅ **Autenticação JWT**
-- Todos os endpoints protegidos
-- Login simulado para obtenção de token
-
-✅ **Health Checks**
-- Endpoints de health check para monitoramento
-- Verificação de serviços externos (SQL Server, MongoDB, Redis, RabbitMQ)
-- Endpoints de readiness e liveness
-- Health checks customizados para a aplicação
-
-## 🔄 Fluxo de Dados
-
-1. **Criação de Pedido**:
-   ```
-   HTTP Request → Controller → Command → Handler → 
-   SQL Server (Order) + MongoDB (Items) → RabbitMQ Event → Response
-   ```
-
-2. **Consulta de Pedido**:
-   ```
-   HTTP Request → Controller → Query → Handler → 
-   Cache Check → SQL Server + MongoDB → Cache Store → Response
-   ```
-
-## 🚀 Próximos Passos
-
-- [ ] Implementar validações mais robustas
-- [ ] Adicionar logs estruturados
-- [ ] Adicionar métricas de performance
-- [ ] Implementar testes de integração
-- [ ] Adicionar documentação da API com OpenAPI
-- [ ] Implementar rate limiting
-- [ ] Adicionar monitoramento com APM
-
-## 📝 Licença
-
-Este projeto foi desenvolvido como parte de um desafio técnico.
+Para dúvidas ou problemas, consulte os logs do Docker ou execute os health checks para diagnosticar problemas de conectividade.

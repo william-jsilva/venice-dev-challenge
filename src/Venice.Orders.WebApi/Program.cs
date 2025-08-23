@@ -18,12 +18,56 @@ using Venice.Orders.WebApi.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add Docker-specific configuration file
+if (builder.Environment.EnvironmentName == "Docker")
+{
+    builder.Configuration.AddJsonFile("appsettings.Docker.json", optional: false, reloadOnChange: true);
+}
+
 // Configure MongoDB serialization globally at application startup
 MongoDbConfigurationService.ConfigureSerialization();
 
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? new[] { "*" };
+        var allowedMethods = builder.Configuration.GetSection("Cors:AllowedMethods").Get<string[]>() ?? new[] { "*" };
+        var allowedHeaders = builder.Configuration.GetSection("Cors:AllowedHeaders").Get<string[]>() ?? new[] { "*" };
+
+        if (allowedOrigins.Contains("*"))
+        {
+            policy.AllowAnyOrigin();
+        }
+        else
+        {
+            policy.WithOrigins(allowedOrigins);
+        }
+
+        if (allowedMethods.Contains("*"))
+        {
+            policy.WithMethods(allowedMethods);
+        }
+        else
+        {
+            policy.AllowAnyMethod();
+        }
+
+        if (allowedHeaders.Contains("*"))
+        {
+            policy.AllowAnyHeader();
+        }
+        else
+        {
+            policy.WithHeaders(allowedHeaders);
+        }
+    });
+});
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
@@ -191,16 +235,24 @@ builder.Services.AddHealthChecks()
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Enable Swagger for both Development and Docker environments
+if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Venice Orders API v1");
+        // Swagger UI will be available at /swagger
+    });
 }
 
 // Add middleware
 app.UseMiddleware<ValidationExceptionMiddleware>();
 
-app.UseHttpsRedirection();
+// Use CORS
+app.UseCors("AllowAll");
+
+// HTTPS redirection disabled for Docker environment
 
 app.UseAuthentication();
 app.UseAuthorization();
