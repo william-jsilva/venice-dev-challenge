@@ -1,9 +1,7 @@
 using MongoDB.Driver;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.Serializers;
 using Venice.Orders.Domain.Entities;
 using Venice.Orders.Domain.Repositories;
+using Venice.Orders.Infrastructure.Services;
 
 namespace Venice.Orders.Infrastructure.Repositories;
 
@@ -13,23 +11,7 @@ public class OrderItemRepository : IOrderItemRepository
 
     public OrderItemRepository(IMongoDatabase database)
     {
-        // Configure Guid serialization for this repository
-        ConfigureGuidSerialization();
-
         _collection = database.GetCollection<OrderItem>("OrderItems");
-    }
-
-    private static void ConfigureGuidSerialization()
-    {
-        // Register a custom Guid serializer that handles the serialization properly
-        try
-        {
-            BsonSerializer.RegisterSerializer(typeof(Guid), new GuidSerializer(BsonType.String));
-        }
-        catch (BsonSerializationException ex) when (ex.Message.Contains("already a serializer registered"))
-        {
-            // Serializer already registered, ignore the exception
-        }
     }
 
     public async Task<OrderItem?> GetByIdAsync(Guid id)

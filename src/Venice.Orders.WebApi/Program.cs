@@ -18,6 +18,9 @@ using Venice.Orders.WebApi.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure MongoDB serialization globally at application startup
+MongoDbConfigurationService.ConfigureSerialization();
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
