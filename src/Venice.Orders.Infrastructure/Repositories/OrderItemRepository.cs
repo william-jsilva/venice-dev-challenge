@@ -1,4 +1,7 @@
 using MongoDB.Driver;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
 using Venice.Orders.Domain.Entities;
 using Venice.Orders.Domain.Repositories;
 
@@ -10,7 +13,16 @@ public class OrderItemRepository : IOrderItemRepository
 
     public OrderItemRepository(IMongoDatabase database)
     {
+        // Configure Guid serialization for this repository
+        ConfigureGuidSerialization();
+
         _collection = database.GetCollection<OrderItem>("OrderItems");
+    }
+
+    private static void ConfigureGuidSerialization()
+    {
+        // Register a custom Guid serializer that handles the serialization properly
+        BsonSerializer.RegisterSerializer(typeof(Guid), new GuidSerializer(BsonType.String));
     }
 
     public async Task<OrderItem?> GetByIdAsync(Guid id)

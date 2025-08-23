@@ -101,7 +101,11 @@ builder.Services.AddDbContext<VeniceOrdersContext>(options =>
 builder.Services.AddSingleton<IMongoClient>(provider =>
 {
     var connectionString = builder.Configuration.GetConnectionString("MongoDB");
-    return new MongoClient(connectionString);
+    
+    // Configure MongoDB settings with proper Guid representation
+    var settings = MongoClientSettings.FromConnectionString(connectionString);
+    
+    return new MongoClient(settings);
 });
 
 builder.Services.AddSingleton<IMongoDatabase>(provider =>
@@ -161,7 +165,12 @@ builder.Services.AddHealthChecks()
         tags: new[] { "database", "sql" },
         timeout: TimeSpan.FromSeconds(5))
     .AddMongoDb(
-        provider => new MongoClient(builder.Configuration.GetConnectionString("MongoDB") ?? string.Empty),
+        provider => 
+        {
+            var connectionString = builder.Configuration.GetConnectionString("MongoDB") ?? string.Empty;
+            var settings = MongoClientSettings.FromConnectionString(connectionString);
+            return new MongoClient(settings);
+        },
         name: "mongodb",
         tags: new[] { "database", "nosql" },
         timeout: TimeSpan.FromSeconds(5))
