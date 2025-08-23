@@ -22,7 +22,14 @@ public class OrderItemRepository : IOrderItemRepository
     private static void ConfigureGuidSerialization()
     {
         // Register a custom Guid serializer that handles the serialization properly
-        BsonSerializer.RegisterSerializer(typeof(Guid), new GuidSerializer(BsonType.String));
+        try
+        {
+            BsonSerializer.RegisterSerializer(typeof(Guid), new GuidSerializer(BsonType.String));
+        }
+        catch (BsonSerializationException ex) when (ex.Message.Contains("already a serializer registered"))
+        {
+            // Serializer already registered, ignore the exception
+        }
     }
 
     public async Task<OrderItem?> GetByIdAsync(Guid id)
