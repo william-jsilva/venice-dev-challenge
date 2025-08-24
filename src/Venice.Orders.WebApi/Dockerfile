@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
-EXPOSE 80 443
+EXPOSE 80
 
 # Install only essential tools for health checks
 RUN apt-get update && apt-get install -y \
