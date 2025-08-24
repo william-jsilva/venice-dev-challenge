@@ -1,216 +1,269 @@
-# Venice Orders - Sistema de Gerenciamento de Pedidos
+# 🚀 Venice Dev Challenge - Sistema de Pedidos
 
 ## 📋 Descrição
 
-O Venice Orders é um microserviço de gerenciamento de pedidos desenvolvido para integrar com plataformas parceiras. O sistema recebe pedidos via API REST, armazena dados em bancos híbridos (SQL Server + MongoDB) e comunica com sistemas externos através de mensageria assíncrona.
+O **Venice Dev Challenge** é um sistema de gerenciamento de pedidos desenvolvido em .NET 9, implementando uma arquitetura limpa (Clean Architecture) com padrões modernos de desenvolvimento. O sistema oferece funcionalidades completas para criação, consulta e gerenciamento de pedidos, utilizando múltiplas tecnologias de banco de dados e mensageria.
 
 ## 🏗️ Arquitetura
 
-### Padrão Arquitetural: Clean Architecture + CQRS
-
-O projeto segue os princípios da **Clean Architecture** combinada com **CQRS (Command Query Responsibility Segregation)** e **DDD (Domain-Driven Design)**. Esta escolha foi baseada nos seguintes fatores:
-
-#### Justificativa da Arquitetura
-
-1. **Separação de Responsabilidades**: A Clean Architecture separa claramente as camadas de domínio, aplicação, infraestrutura e apresentação
-2. **Independência de Frameworks**: O domínio não depende de frameworks externos, facilitando testes e manutenção
-3. **CQRS**: Separação entre comandos (write) e queries (read) para otimizar performance e escalabilidade
-4. **DDD**: Modelagem focada no domínio de negócio, com entidades e agregados bem definidos
-
-### Estrutura do Projeto
+O projeto segue os princípios da **Clean Architecture** e **CQRS** (Command Query Responsibility Segregation), organizado em camadas bem definidas:
 
 ```
 src/
-├── Venice.Orders.Domain/          # Camada de Domínio (Entidades, Interfaces)
-├── Venice.Orders.Application/     # Camada de Aplicação (CQRS, DTOs)
-├── Venice.Orders.Infrastructure/  # Camada de Infraestrutura (Repositórios, Serviços)
-├── Venice.Orders.WebApi/          # Camada de Apresentação (Controllers, Middleware)
-└── Venice.Orders.Common/          # Modelos compartilhados
+├── Venice.Orders.WebApi/          # Camada de apresentação (API REST)
+├── Venice.Orders.Application/      # Camada de aplicação (Casos de uso)
+├── Venice.Orders.Domain/          # Camada de domínio (Entidades e regras)
+├── Venice.Orders.Infrastructure/  # Camada de infraestrutura (Implementações)
+├── Venice.Orders.Common/          # Utilitários e componentes compartilhados
+└── tests/                         # Testes unitários
 ```
+
+> 📚 **Documentação Detalhada**: Para informações completas sobre arquitetura, veja [📖 Documentação Completa](.doc/00-index.md)
+
+### 🎯 Padrões Implementados
+
+- **CQRS**: Separação entre comandos (Create, Update, Delete) e consultas (Read)
+- **MediatR**: Implementação do padrão mediator para comunicação entre camadas
+- **Repository Pattern**: Abstração do acesso a dados
+- **Unit of Work**: Gerenciamento de transações
+- **Domain Events**: Eventos de domínio para comunicação assíncrona
+- **Health Checks**: Monitoramento de saúde dos serviços
+
+## 🛠️ Tecnologias
+
+### Backend
+- **.NET 9** - Framework principal
+- **ASP.NET Core** - Web API
+- **Entity Framework Core** - ORM para SQL Server
+- **MongoDB.Driver** - Driver para MongoDB
+- **MediatR** - Implementação do padrão mediator
+- **AutoMapper** - Mapeamento de objetos
+- **FluentValidation** - Validação de dados
+
+> 🔧 **Detalhes Técnicos**: Para informações completas sobre tecnologias e dependências, veja [🛠️ Tecnologias](.doc/02-technologies.md)
+
+### Bancos de Dados
+- **SQL Server 2022** - Dados principais dos pedidos
+- **MongoDB 7.0** - Armazenamento de itens dos pedidos
+- **Redis 7.2** - Cache e sessões
+- **RabbitMQ 3.12** - Mensageria e filas
+
+### Infraestrutura
+- **Docker & Docker Compose** - Containerização
+- **JWT Bearer** - Autenticação
+- **Swagger/OpenAPI** - Documentação da API
+- **Health Checks** - Monitoramento de serviços
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
-
 - Docker Desktop
-- .NET 9.0 SDK (para desenvolvimento local)
-- PowerShell (para gerar certificado SSL)
+- .NET 9 SDK
+- Visual Studio 2022 ou VS Code
 
-### 1. Configuração SSL (HTTPS)
+> 🚀 **Guia Completo**: Para instruções detalhadas de instalação e configuração, veja [🚀 Como Executar](.doc/03-getting-started.md)
 
-Para habilitar HTTPS, execute o script de geração de certificado:
-
-```powershell
-# Execute como Administrador
-# (Certificado SSL não configurado - HTTPS desabilitado)
-```
-
-### 2. Executar com Docker
-
+### 1. Clone o repositório
 ```bash
-# Construir e iniciar todos os serviços
-docker-compose up --build
-
-# Executar em background
-docker-compose up -d --build
+git clone <repository-url>
+cd venice-dev-challenge
 ```
 
-### 3. Acessar a API
-
-#### **Desenvolvimento Local**
-- **HTTP**: http://localhost:7050
-- **HTTPS**: https://localhost:7051
-- **Swagger UI**: http://localhost:7050/swagger ou https://localhost:7051/swagger
-- **Health Check**: http://localhost:7050/health
-
-#### **Docker**
-- **HTTP**: http://localhost:5000
-- **Swagger UI**: http://localhost:5000/swagger
-- **Health Check**: http://localhost:5000/health
-
-### 4. Serviços Disponíveis
-
-#### **Desenvolvimento Local**
-- **API**: http://localhost:7050 (HTTP) / https://localhost:7051 (HTTPS)
-- **Swagger UI**: http://localhost:7050/swagger
-
-#### **Docker**
-- **API**: http://localhost:5000 (HTTP)
-- **Swagger UI**: http://localhost:5000/swagger
-- **SQL Server**: localhost:1433
-- **MongoDB**: localhost:27017
-- **Redis**: localhost:6379
-- **RabbitMQ**: localhost:5672
-- **RabbitMQ Management**: http://localhost:15672
-
-## 🔐 Autenticação
-
-### Credenciais
-
-- **RabbitMQ**: `venice_user` / `VeniceMQ2024`
-- **SQL Server**: `sa` / `VeniceOrders@2024`
-
-### Obter Token JWT
-
+### 2. Execute com Docker Compose
 ```bash
-# Registrar usuário
-curl -X POST http://localhost:5000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "admin123"}'
-
-# Fazer login
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "admin123"}'
+docker-compose up -d
 ```
 
-## 📡 Endpoints da API
+Este comando irá:
+- Iniciar SQL Server na porta 1433
+- Iniciar MongoDB na porta 27017
+- Iniciar Redis na porta 6379
+- Iniciar RabbitMQ na porta 5672 (Management UI: 15672)
+- Construir e executar a API na porta 5050
 
-### Autenticação
-- `POST /api/auth/register` - Registrar usuário
-- `POST /api/auth/login` - Fazer login
+### 3. Acesse a aplicação
+- **API**: http://localhost:5050
+- **Swagger**: http://localhost:5050/swagger
+- **RabbitMQ Management**: http://localhost:15672 (venice_user/VeniceMQ2024)
 
-### Pedidos
-- `POST /api/orders` - Criar pedido (requer autenticação)
-- `GET /api/orders/{id}` - Buscar pedido por ID (requer autenticação)
+### 4. Executar localmente (opcional)
+```bash
+cd src
+dotnet restore
+dotnet run --project Venice.Orders.WebApi
+```
 
-### Health Checks
-- `GET /health` - Status geral da aplicação
-- `GET /health/ready` - Status dos serviços externos
-- `GET /health/live` - Status da aplicação
+## 📊 Estrutura do Banco de Dados
 
-## 🗄️ Armazenamento Híbrido
+### SQL Server (Dados Principais)
+- **Orders**: Informações básicas dos pedidos (ID, CustomerId, Status, TotalAmount)
+- **Users**: Usuários do sistema
 
-### SQL Server
-- Dados principais dos pedidos (ID, ClienteID, Data, Status, TotalAmount)
-- Tabelas: Orders, Users
+> 📊 **Estrutura Detalhada**: Para schemas completos, índices e configurações, veja [📊 Estrutura do Banco de Dados](.doc/05-database-structure.md)
 
-### MongoDB
-- Lista de itens dos pedidos (produto, quantidade, preço unitário)
-- Coleção: OrderItems
+### MongoDB (Itens dos Pedidos)
+- **OrderItems**: Detalhes dos itens de cada pedido (ProductId, Quantity, UnitPrice)
 
-## 🔄 Mensageria
+### Redis
+- Cache de sessões e dados frequentemente acessados
 
 ### RabbitMQ
-- Evento: `OrderCreatedEvent`
-- Exchange: `venice.orders`
-- Routing Key: `order.created`
+- Filas para processamento assíncrono de pedidos
+
+## 🔌 API Endpoints
+
+### Autenticação
+Todos os endpoints requerem autenticação JWT Bearer.
+
+> 🔌 **Referência Completa**: Para documentação completa da API com exemplos e códigos de resposta, veja [🔌 API Reference](.doc/04-api-reference.md)
+
+### Pedidos
+
+#### POST /api/orders
+Cria um novo pedido.
+
+**Request Body:**
+```json
+{
+  "customerId": "guid",
+  "items": [
+    {
+      "productId": "guid",
+      "quantity": 2,
+      "unitPrice": 29.99
+    }
+  ]
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "id": "guid",
+  "customerId": "guid",
+  "createdAt": "2024-01-01T00:00:00Z",
+  "status": "Pending",
+  "totalAmount": 59.98,
+  "items": [...]
+}
+```
+
+#### GET /api/orders/{id}
+Obtém um pedido específico por ID.
+
+#### GET /api/orders
+Lista todos os pedidos.
+
+### Status dos Pedidos
+- **Pending**: Pedido criado, aguardando confirmação
+- **Confirmed**: Pedido confirmado, aguardando entrega
+- **Delivered**: Pedido entregue
+- **Cancelled**: Pedido cancelado
+
+## 🔧 Configuração
+
+### Variáveis de Ambiente
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=sqlserver;Database=VeniceOrders;User Id=sa;Password=VeniceOrders@2024;TrustServerCertificate=true",
+    "MongoConnection": "mongodb://mongodb:27017",
+    "RedisConnection": "redis:6379",
+    "RabbitMQConnection": "amqp://venice_user:VeniceMQ2024@rabbitmq:5672"
+  }
+}
+```
+
+### Health Checks
+- **SQL Server**: Verificação de conectividade e migrações
+- **MongoDB**: Ping do banco
+- **Redis**: Ping do cache
+- **RabbitMQ**: Ping da mensageria
 
 ## 🧪 Testes
 
 ```bash
-# Executar testes unitários
-cd src
+cd src/tests
 dotnet test
 ```
 
-## 📊 Monitoramento
+> 🧪 **Desenvolvimento**: Para padrões de desenvolvimento, testes e CI/CD, veja [🧪 Desenvolvimento e Testes](.doc/06-development-testing.md)
 
-### Health Checks
-- **Application**: Status da aplicação
-- **External Services**: Status dos serviços externos
-- **SQL Server**: Conexão com banco de dados
-- **MongoDB**: Conexão com MongoDB
-- **Redis**: Conexão com cache
-- **Entity Framework**: Status do contexto
+## 📁 Estrutura de Arquivos
 
-## 🔧 Configurações
-
-### Variáveis de Ambiente
-- `ASPNETCORE_ENVIRONMENT`: Docker
-- `ASPNETCORE_URLS`: http://+:80;https://+:443
-
-### Certificado SSL
-- **Arquivo**: `certs/venice-orders.pfx`
-- **Senha**: `VeniceOrders2024`
-- **Validade**: 1 ano
-
-## 🐛 Troubleshooting
-
-### Problemas Comuns
-
-1. **Erro de CORS**: Verificar configuração CORS no `appsettings.Docker.json`
-2. **Certificado SSL**: Executar `generate-cert.ps1` como Administrador
-3. **Health Check falhando**: Aguardar inicialização completa dos serviços
-4. **Migrations**: Executadas automaticamente no Docker
-
-### Logs
-
-```bash
-# Ver logs da API
-docker-compose logs venice-orders-api
-
-# Ver logs de todos os serviços
-docker-compose logs
-
-# Ver logs em tempo real
-docker-compose logs -f
+```
+src/
+├── Venice.Orders.WebApi/
+│   ├── Features/Orders/          # Controllers e ViewModels
+│   ├── Configuration/            # Configurações da aplicação
+│   ├── HealthChecks/            # Verificações de saúde
+│   ├── Middleware/              # Middlewares customizados
+│   └── Program.cs               # Ponto de entrada
+├── Venice.Orders.Application/
+│   ├── Orders/                  # Casos de uso dos pedidos
+│   ├── Dtos/                    # Objetos de transferência
+│   └── Interfaces/              # Contratos da aplicação
+├── Venice.Orders.Domain/
+│   ├── Entities/                # Entidades de domínio
+│   ├── Repositories/            # Interfaces dos repositórios
+│   ├── Events/                  # Eventos de domínio
+│   └── Enums/                   # Enumerações
+├── Venice.Orders.Infrastructure/
+│   ├── Persistence/             # Implementações dos repositórios
+│   ├── Services/                # Serviços de infraestrutura
+│   └── Messaging/               # Implementações de mensageria
+└── Venice.Orders.Common/
+    ├── Extensions/              # Extensões de métodos
+    ├── Filters/                 # Filtros customizados
+    └── Middleware/              # Middlewares compartilhados
 ```
 
-## 📝 Notas de Implementação
+> 📚 **Documentação Completa**: Para detalhes sobre cada camada e padrões implementados, veja [🏗️ Arquitetura](.doc/01-architecture.md)
 
-- **Cache Redis**: Configurado para 2 minutos
-- **Migrations**: Aplicadas automaticamente no Docker
-- **CORS**: Configurado para permitir todas as origens
-- **HTTPS**: Habilitado com certificado autoassinado
-- **Health Checks**: Implementados para todos os serviços
+## 🚀 Deploy
 
-## 🎯 Funcionalidades Implementadas
+### Docker
+```bash
+# Build da imagem
+docker build -t venice-orders-api ./src
 
-✅ Endpoint REST para criação de pedido  
-✅ Armazenamento híbrido (SQL Server + MongoDB)  
-✅ Publicação em fila RabbitMQ  
-✅ Endpoint GET /pedidos/{id}  
-✅ Cache Redis para GET  
-✅ Testes unitários  
-✅ Boas práticas (DDD, SOLID, Clean Architecture)  
-✅ Autenticação JWT obrigatória  
-✅ Docker Compose funcional  
-✅ HTTPS habilitado  
-✅ Health Checks completos  
-✅ CORS configurado  
-✅ Migrations automáticas  
+# Execução
+docker run -p 5050:80 venice-orders-api
+```
 
-## 📞 Suporte
+### Kubernetes
+```bash
+kubectl apply -f k8s/
+```
 
-Para dúvidas ou problemas, consulte os logs do Docker ou execute os health checks para diagnosticar problemas de conectividade.
+## 📈 Monitoramento
+
+- **Health Checks**: `/health` endpoint para verificação de saúde
+- **Logs**: Logs estruturados com Serilog
+- **Métricas**: Métricas básicas de performance
+
+## 🤝 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 📝 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+
+## 👥 Autores
+
+- **Venice Dev Team** - Desenvolvimento inicial
+
+## 🙏 Agradecimentos
+
+- .NET Community
+- Clean Architecture patterns
+- CQRS community
+
+---
+
+**Venice Dev Challenge** - Sistema de Pedidos com Arquitetura Limpa 🚀
