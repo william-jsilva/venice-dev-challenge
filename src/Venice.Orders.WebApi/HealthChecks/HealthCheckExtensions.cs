@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Routing;
 using MongoDB.Driver;
 using StackExchange.Redis;
 using Venice.Orders.Infrastructure.Data;
@@ -44,10 +45,10 @@ public static class HealthCheckExtensions
         return services;
     }
 
-    public static IApplicationBuilder UseApplicationHealthChecks(this IApplicationBuilder app)
+    public static IEndpointRouteBuilder MapApplicationHealthChecks(this IEndpointRouteBuilder endpoints)
     {
         // Health Check endpoints
-        app.MapHealthChecks("/health", new HealthCheckOptions
+        endpoints.MapHealthChecks("/health", new HealthCheckOptions
         {
             ResponseWriter = async (context, report) =>
             {
@@ -73,7 +74,7 @@ public static class HealthCheckExtensions
             }
         });
 
-        app.MapHealthChecks("/health/ready", new HealthCheckOptions
+        endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions
         {
             Predicate = check => check.Tags.Contains("external") || check.Tags.Contains("database"),
             ResponseWriter = async (context, report) =>
@@ -98,7 +99,7 @@ public static class HealthCheckExtensions
             }
         });
 
-        app.MapHealthChecks("/health/live", new HealthCheckOptions
+        endpoints.MapHealthChecks("/health/live", new HealthCheckOptions
         {
             Predicate = check => check.Tags.Contains("app"),
             ResponseWriter = async (context, report) =>
@@ -116,6 +117,6 @@ public static class HealthCheckExtensions
             }
         });
 
-        return app;
+        return endpoints;
     }
 }

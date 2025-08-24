@@ -1,5 +1,6 @@
 using Venice.Orders.WebApi.Middleware;
 using Venice.Orders.WebApi.HealthChecks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Venice.Orders.WebApi.Configuration;
 
@@ -31,11 +32,6 @@ public static class ApplicationBuilderExtensions
 
         app.UseAuthentication();
         app.UseAuthorization();
-
-        app.MapControllers();
-
-        // Health Checks
-        app.UseApplicationHealthChecks();
 
         return app;
     }

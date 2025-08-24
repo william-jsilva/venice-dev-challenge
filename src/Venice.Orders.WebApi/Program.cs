@@ -1,21 +1,6 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using MediatR;
-using AutoMapper;
-using StackExchange.Redis;
-using MongoDB.Driver;
-using RabbitMQ.Client;
-using Venice.Orders.Infrastructure.Data;
-using Venice.Orders.Infrastructure.Repositories;
 using Venice.Orders.Infrastructure.Services;
-using Venice.Orders.Domain.Repositories;
-using Venice.Orders.Application.Interfaces;
-using Venice.Orders.Application;
-using Venice.Orders.WebApi.Middleware;
-using Venice.Orders.WebApi.HealthChecks;
 using Venice.Orders.WebApi.Configuration;
+using Venice.Orders.WebApi.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +29,10 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline
 app.UseApplicationPipeline(builder.Environment);
+
+// Map endpoints
+app.MapControllers();
+app.MapApplicationHealthChecks();
 
 // Apply database migrations
 app.ApplyDatabaseMigrations(builder.Environment);
