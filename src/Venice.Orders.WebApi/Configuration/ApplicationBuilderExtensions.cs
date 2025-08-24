@@ -7,7 +7,7 @@ namespace Venice.Orders.WebApi.Configuration;
 public static class ApplicationBuilderExtensions
 {
     public static IApplicationBuilder UseApplicationPipeline(
-        this IApplicationBuilder app, 
+        this IApplicationBuilder app,
         IWebHostEnvironment environment)
     {
         // Configure the HTTP request pipeline.
@@ -39,20 +39,17 @@ public static class ApplicationBuilderExtensions
     public static IApplicationBuilder ApplyDatabaseMigrations(this IApplicationBuilder app, IWebHostEnvironment environment)
     {
         // Apply migrations when running in Docker
-        if (environment.EnvironmentName == "Docker")
+        using (var scope = app.ApplicationServices.CreateScope())
         {
-            using (var scope = app.ApplicationServices.CreateScope())
+            try
             {
-                try
-                {
-                    var context = scope.ServiceProvider.GetRequiredService<Venice.Orders.Infrastructure.Data.VeniceOrdersContext>();
-                    context.Database.Migrate();
-                    Console.WriteLine("Database migrations applied successfully");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error applying migrations: {ex.Message}");
-                }
+                var context = scope.ServiceProvider.GetRequiredService<Venice.Orders.Infrastructure.Data.VeniceOrdersContext>();
+                context.Database.Migrate();
+                Console.WriteLine("Database migrations applied successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error applying migrations: {ex.Message}");
             }
         }
 
