@@ -1,12 +1,11 @@
-using Venice.Orders.Domain.Enums;
 using Venice.Orders.Common.Models;
 
-namespace Venice.Orders.Application.Orders.GetOrder;
+namespace Venice.Orders.Application.Orders.GetAllOrders;
 
 /// <summary>
-/// Result of getting an order.
+/// Result of getting all orders
 /// </summary>
-public class GetOrderResult
+public class GetAllOrdersResult
 {
     /// <summary>
     /// Order ID
@@ -14,19 +13,19 @@ public class GetOrderResult
     public Guid Id { get; set; }
     
     /// <summary>
-    /// Customer ID
+    /// Order number (formatted)
     /// </summary>
-    public Guid CustomerId { get; set; }
+    public string OrderNumber { get; set; } = string.Empty;
     
     /// <summary>
     /// Order creation date
     /// </summary>
-    public DateTime CreatedAt { get; set; }
+    public DateTime OrderDate { get; set; }
     
     /// <summary>
     /// Order status
     /// </summary>
-    public OrderStatus Status { get; set; }
+    public string Status { get; set; } = string.Empty;
     
     /// <summary>
     /// Total amount of the order
@@ -34,8 +33,17 @@ public class GetOrderResult
     public decimal TotalAmount { get; set; }
     
     /// <summary>
+    /// Customer name
+    /// </summary>
+    public string CustomerName { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Customer email
+    /// </summary>
+    public string CustomerEmail { get; set; } = string.Empty;
+    
+    /// <summary>
     /// List of order items
     /// </summary>
     public List<OrderItemResult> Items { get; set; } = new();
 }
-

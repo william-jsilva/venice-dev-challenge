@@ -21,10 +21,4 @@ public class CreateOrderCommand : IRequest<CreateOrderResult>
     /// List of items in the order
     /// </summary>
     public List<OrderItemRequest> Items { get; set; } = new();
-    
-    public CreateOrderCommand(CreateOrderRequest request)
-    {
-        CustomerId = request.CustomerId;
-        Items = request.Items;
-    }
 }

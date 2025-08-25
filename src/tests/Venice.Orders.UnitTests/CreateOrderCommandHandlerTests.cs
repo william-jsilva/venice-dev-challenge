@@ -32,16 +32,15 @@ public class CreateOrderCommandHandlerTests
     public async Task Handle_ValidCommand_ShouldCreateOrderAndPublishEvent()
     {
         // Arrange
-        var request = new Venice.Orders.Application.Dtos.CreateOrderRequest
+        var customerId = Guid.NewGuid();
+        var command = new CreateOrderCommand
         {
-            CustomerId = Guid.NewGuid(),
+            CustomerId = customerId,
             Items = new List<Venice.Orders.Application.Dtos.OrderItemRequest>
             {
                 new() { ProductName = "Test Product", Quantity = 2, UnitPrice = 10.00m }
             }
         };
-
-        var command = new CreateOrderCommand(request);
 
         _orderRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<Venice.Orders.Domain.Entities.Order>()))
             .ReturnsAsync((Venice.Orders.Domain.Entities.Order order) => order);
@@ -54,7 +53,7 @@ public class CreateOrderCommandHandlerTests
 
         // Assert
         result.Should().NotBeNull();
-        result.CustomerId.Should().Be(request.CustomerId);
+        result.CustomerId.Should().Be(customerId);
         result.Items.Should().HaveCount(1);
         result.Items.First().ProductName.Should().Be("Test Product");
         result.TotalAmount.Should().Be(20.00m);

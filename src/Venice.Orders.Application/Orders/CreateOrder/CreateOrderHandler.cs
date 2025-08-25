@@ -4,6 +4,7 @@ using Venice.Orders.Domain.Entities;
 using Venice.Orders.Domain.Repositories;
 using Venice.Orders.Domain.Events;
 using Venice.Orders.Application.Interfaces;
+using Venice.Orders.Common.Models;
 
 namespace Venice.Orders.Application.Orders.CreateOrder;
 
@@ -35,15 +36,16 @@ public class CreateOrderHandler(
             CustomerId = request.CustomerId
         };
 
-        // Criar os itens do pedido para MongoDB
-        var orderItems = request.Items.Select(item => 
-            new OrderItem(order.Id, item.ProductName, item.Quantity, item.UnitPrice)).ToList();
-
-        // Calcular total amount
-        order.TotalAmount = orderItems.Sum(item => item.TotalPrice);
+        // Calcular total amount baseado nos itens da request
+        var totalAmount = request.Items.Sum(item => item.Quantity * item.UnitPrice);
+        order.TotalAmount = totalAmount;
 
         // Salvar o pedido no SQL Server (apenas dados principais)
         var createdOrder = await orderRepository.CreateAsync(order);
+
+        // Criar os itens do pedido para MongoDB usando o ID do pedido criado
+        var orderItems = request.Items.Select(item => 
+            new OrderItem(createdOrder.Id, item.ProductName, item.Quantity, item.UnitPrice)).ToList();
 
         // Salvar os itens no MongoDB (armazenamento híbrido)
         await orderItemRepository.CreateManyAsync(orderItems);
