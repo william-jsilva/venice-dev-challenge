@@ -14,18 +14,18 @@ public class CreateOrderProfile : Profile
     /// </summary>
     public CreateOrderProfile()
     {
+        // Mapeamento do WebApi CreateOrderRequest para Application CreateOrderCommand
         CreateMap<CreateOrderRequest, CreateOrderCommand>()
-            .ForCtorParam("request", opt => opt.MapFrom(src => new Venice.Orders.Application.Dtos.CreateOrderRequest
-            {
-                CustomerId = src.CustomerId,
-                Items = src.Items.Select(item => new Venice.Orders.Application.Dtos.OrderItemRequest
-                {
-                    ProductName = item.ProductName,
-                    Quantity = item.Quantity,
-                    UnitPrice = item.UnitPrice
-                }).ToList()
-            }));
+            .ForMember(dest => dest.CustomerId, opt => opt.MapFrom(src => src.CustomerId))
+            .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items));
 
+        // Mapeamento dos itens do WebApi para Application (resolvendo conflito de namespace)
+        CreateMap<OrderItemRequest, Venice.Orders.Application.Dtos.OrderItemRequest>()
+            .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.ProductName))
+            .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
+            .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice));
+
+        // Mapeamento do resultado para resposta da API
         CreateMap<CreateOrderResult, CreateOrderResponse>();
     }
 }

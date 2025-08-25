@@ -2,6 +2,7 @@ using MediatR;
 using Venice.Orders.Application.Orders.GetOrder;
 using Venice.Orders.Domain.Repositories;
 using Venice.Orders.Application.Interfaces;
+using Venice.Orders.Common.Models;
 
 namespace Venice.Orders.Application.Orders.GetOrder;
 

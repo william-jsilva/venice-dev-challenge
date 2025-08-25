@@ -1,6 +1,7 @@
 using MongoDB.Driver;
 using Venice.Orders.Domain.Entities;
 using Venice.Orders.Domain.Repositories;
+using Venice.Orders.Infrastructure.Services;
 
 namespace Venice.Orders.Infrastructure.Repositories;
 
